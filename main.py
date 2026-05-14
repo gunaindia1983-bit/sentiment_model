@@ -8,9 +8,9 @@ import pandas as pd
 import os
 
 # 1. Define the custom transformer FIRST so joblib can find it
-class DenseTransformer:
-    def fit(self, X, y=None): return self
-    def transform(self, X): return X.toarray()
+# class DenseTransformer:
+#     def fit(self, X, y=None): return self
+#     def transform(self, X): return X.toarray()
 
 app = FastAPI()
 
