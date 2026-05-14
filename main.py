@@ -1,56 +1,63 @@
-# This updated cell fixes the AttributeError by defining DenseTransformer BEFORE loading the model
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from flask import Flask, request, jsonify
 import joblib
-import random
-from datetime import date
-import pandas as pd
 import os
+import __main__
+import pymongo
 
-# 1. Define the custom transformer FIRST so joblib can find it
-# class DenseTransformer:
-#     def fit(self, X, y=None): return self
-#     def transform(self, X): return X.toarray()
+# Define custom transformer for joblib loading compatibility
+class DenseTransformer:
+    def fit(self, X, y=None): return self
+    def transform(self, X): return X.toarray()
 
-app = FastAPI()
+setattr(__main__, 'DenseTransformer', DenseTransformer)
 
-# 2. Load model - referencing the same filename expected in the repo
-model_path = "sklearn_sentiment_model.pkl"
+app = Flask(__name__)
+
+# Setup the model loading
+# NOTE: For Render, ensure you upload the .pkl file to your repo or use an external link/storage
+model_path = 'sklearn_sentiment_model.pkl'
 if os.path.exists(model_path):
-    loaded_model = joblib.load(model_path)
+    model = joblib.load(model_path)
 else:
-    loaded_model = None
+    model = None
 
-class SentimentRequest(BaseModel):
-    foodId: str
-    Food: str
-    comments: str
+# Setup MongoDB Connection (Best practice: use environment variables)
+mongo_uri = os.environ.get('MONGO_URI', 'mongodb+srv://reactapp:12345@cluster0.vzwkwrj.mongodb.net/?appName=Cluster0')
+client = pymongo.MongoClient(mongo_uri)
+db = client['food-delivery-app']
+foods_collection = db['foods']
 
-NAMES = ["Alice Smith", "Bob Johnson", "Charlie Brown", "Diana Prince", "Ethan Hunt"]
+@app.route('/analyze', methods=['POST'])
+def analyze_sentiment():
+    if model is None:
+        return jsonify({"error": "Sentiment model not found"}), 500
 
-@app.get("/")
-def home():
-    return {"status": "Server is running", "model_loaded": loaded_model is not None}
+    data = request.get_json()
+    customer_name = data.get('customerName', 'Anonymous')
+    food_id = data.get('foodId')
+    food_name = data.get('food')
+    comment = data.get('comment')
 
-@app.post("/analyze_food")
-def analyze_food(request: SentimentRequest):
-    if not loaded_model:
-        raise HTTPException(status_code=500, detail="Model file not found on server.")
-    
     try:
-        prediction = loaded_model.predict([request.comments])[0]
-        confidence = float(loaded_model.predict_proba([request.comments]).max())
+        prediction = model.predict([comment])[0]
         star_map = {"POSITIVE": 5, "NEUTRAL": 3, "NEGATIVE": 1}
-        stars = star_map.get(prediction, 3)
+        stars = int(star_map.get(prediction.upper(), 3))
 
-        return {
-            "customerName": random.choice(NAMES),
-            "date": str(date.today()),
-            "sentiment_results": {
-                "label": prediction,
-                "confidence": round(confidence, 4),
-                "star_rating": stars
-            }
-        }
+        food_data = foods_collection.find_one({"name": food_name})
+        price = float(food_data.get('price', 14.99)) if food_data else 14.99
+        category = str(food_data.get('category', 'Entre')) if food_data else 'Unknown'
+
+        return jsonify({
+            "customerName": str(customer_name),
+            "foodId": str(food_id),
+            "foodName": str(food_name),
+            "sentiment_label": str(prediction),
+            "star_rating": stars,
+            "price": price,
+            "category": category
+        })
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
