@@ -36,10 +36,10 @@ def analyze_sentiment():
     customer_name = data.get('customerName', 'Anonymous')
     food_id = data.get('foodId')
     food_name = data.get('food')
-    comment = data.get('comment')
+    comments = data.get('comments')
 
     try:
-        prediction = model.predict([comment])[0]
+        prediction = model.predict([comments])[0]
         star_map = {"POSITIVE": 5, "NEUTRAL": 3, "NEGATIVE": 1}
         stars = int(star_map.get(prediction.upper(), 3))
 
