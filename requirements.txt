@@ -5,5 +5,4 @@ pymongo
 scikit-learn
 pandas
 numpy
-random
 datetime
