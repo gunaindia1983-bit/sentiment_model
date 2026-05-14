@@ -1,3 +1,4 @@
+# This updated cell fixes the AttributeError by defining DenseTransformer BEFORE loading the model
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import joblib
@@ -6,17 +7,19 @@ from datetime import date
 import pandas as pd
 import os
 
-# Handle the custom transformer required by the pickled model
+# 1. Define the custom transformer FIRST so joblib can find it
 class DenseTransformer:
     def fit(self, X, y=None): return self
     def transform(self, X): return X.toarray()
 
 app = FastAPI()
 
-# Load model - ensure this file is uploaded to your repo
-# Or use an absolute path if using a persistent disk
+# 2. Load model - referencing the same filename expected in the repo
 model_path = "sklearn_sentiment_model.pkl"
-loaded_model = joblib.load(model_path)
+if os.path.exists(model_path):
+    loaded_model = joblib.load(model_path)
+else:
+    loaded_model = None
 
 class SentimentRequest(BaseModel):
     foodId: str
@@ -27,10 +30,13 @@ NAMES = ["Alice Smith", "Bob Johnson", "Charlie Brown", "Diana Prince", "Ethan H
 
 @app.get("/")
 def home():
-    return {"status": "Server is running"}
+    return {"status": "Server is running", "model_loaded": loaded_model is not None}
 
 @app.post("/analyze_food")
 def analyze_food(request: SentimentRequest):
+    if not loaded_model:
+        raise HTTPException(status_code=500, detail="Model file not found on server.")
+    
     try:
         prediction = loaded_model.predict([request.comments])[0]
         confidence = float(loaded_model.predict_proba([request.comments]).max())
@@ -41,8 +47,8 @@ def analyze_food(request: SentimentRequest):
             "customerName": random.choice(NAMES),
             "date": str(date.today()),
             "sentiment_results": {
-                "label": prediction, 
-                "confidence": round(confidence, 4), 
+                "label": prediction,
+                "confidence": round(confidence, 4),
                 "star_rating": stars
             }
         }
