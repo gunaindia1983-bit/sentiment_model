@@ -3,6 +3,15 @@ import joblib
 import os
 import __main__
 import pymongo
+import random
+from datetime import datetime
+
+# List of customer names for random selection
+customer_names = [
+    "Alice Johnson", "Bob Smith", "Charlie Brown", "Diana Prince", "Ethan Hunt",
+    "Fiona Gallagher", "George Miller", "Hannah Abbott", "Ian Wright", "Jane Doe",
+    "Kevin Hart", "Laura Palmer", "Michael Scott", "Nina Simone", "Oscar Wilde"
+]
 
 # Define custom transformer for joblib loading compatibility
 class DenseTransformer:
@@ -32,8 +41,12 @@ def analyze_sentiment():
     if model is None:
         return jsonify({"error": "Sentiment model not found"}), 500
 
+    # Get current date/time
+    current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     data = request.get_json()
-    customer_name = data.get('customerName', 'Anonymous')
+    customer_name = random.choice(customer_names)
+    # customer_name = data.get('customerName', 'Anonymous')
     food_id = data.get('foodId')
     food_name = data.get('food')
     comments = data.get('comments')
@@ -51,10 +64,13 @@ def analyze_sentiment():
             "customerName": str(customer_name),
             "foodId": str(food_id),
             "foodName": str(food_name),
+            "newCOmment": comments,
+            "sentiment_score_5": stars,
             "sentiment_label": str(prediction),
-            "star_rating": stars,
             "price": price,
-            "category": category
+            "category": category,
+            "date": current_date
+            
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
