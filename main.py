@@ -73,8 +73,7 @@ def analyze_sentiment():
             "sentiment_score_5": stars,
             "sentiment_label": str(prediction),
             "price": price,
-            "category": str(category),
-            "date": current_date
+            "category": str(category)
             
         }
 
