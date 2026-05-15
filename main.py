@@ -22,8 +22,8 @@ class DenseTransformer:
 setattr(__main__, 'DenseTransformer', DenseTransformer)
 
 app = Flask(__name__)
-# CORS(app)
-CORS(app,origins=["http://localhost:5173/comments", "http://localhost:5173"])
+CORS(app)
+#CORS(app,origins=["http://localhost:5173/comments", "http://localhost:5173"])
 
 # Setup the model loading
 # NOTE: For Render, ensure you upload the .pkl file to your repo or use an external link/storage
