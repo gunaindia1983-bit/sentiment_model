@@ -38,6 +38,7 @@ mongo_uri = os.environ.get('MONGO_URI', 'mongodb+srv://reactapp:12345@cluster0.v
 client = pymongo.MongoClient(mongo_uri)
 db = client['food-delivery-app']
 foods_collection = db['foods']
+sentiment = db['sentiment']
 
 @app.route('/analyze', methods=['POST'])
 def analyze_sentiment():
@@ -64,7 +65,25 @@ def analyze_sentiment():
         price = float(food_data.get('price', 14.99)) if food_data else 14.99
         # category = str(food_data.get('category', 'Entre')) if food_data else 'Unknown'
 
+        result= jsonify({
+            "customerName": str(customer_name),
+            "foodId": str(food_id),
+            "foodName": str(food_name),
+            "newCOmment": comments,
+            "sentiment_score_5": stars,
+            "sentiment_label": str(prediction),
+            "price": price,
+            "category": str(category),
+            "date": current_date
+            
+        })
+
+        output = sentiment.insert_one(result)
+        
+
         return jsonify({
+            "message": "Data loaded successfully",
+            "inserted_id": str(output.inserted_id)
             "customerName": str(customer_name),
             "foodId": str(food_id),
             "foodName": str(food_name),
