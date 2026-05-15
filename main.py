@@ -5,6 +5,7 @@ import __main__
 import pymongo
 import random
 from datetime import datetime
+from flask_cors import CORS
 
 # List of customer names for random selection
 customer_names = [
@@ -21,6 +22,7 @@ class DenseTransformer:
 setattr(__main__, 'DenseTransformer', DenseTransformer)
 
 app = Flask(__name__)
+CORS(app)
 
 # Setup the model loading
 # NOTE: For Render, ensure you upload the .pkl file to your repo or use an external link/storage
