@@ -6,4 +6,4 @@ scikit-learn
 pandas
 numpy
 datetime
-flask_cors
+flask-cors
