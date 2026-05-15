@@ -83,7 +83,7 @@ def analyze_sentiment():
 
         return jsonify({
             "message": "Data loaded successfully",
-            "inserted_id": str(output.inserted_id)
+            "inserted_id": str(output.inserted_id),
             "customerName": str(customer_name),
             "foodId": str(food_id),
             "foodName": str(food_name),
