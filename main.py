@@ -53,6 +53,7 @@ def analyze_sentiment():
     food_id = data.get('foodId')
     food_name = data.get('food')
     comments = data.get('comments')
+    category = data.get('category')
 
     try:
         prediction = model.predict([comments])[0]
@@ -61,7 +62,7 @@ def analyze_sentiment():
 
         food_data = foods_collection.find_one({"name": food_name})
         price = float(food_data.get('price', 14.99)) if food_data else 14.99
-        category = str(food_data.get('category', 'Entre')) if food_data else 'Unknown'
+        # category = str(food_data.get('category', 'Entre')) if food_data else 'Unknown'
 
         return jsonify({
             "customerName": str(customer_name),
@@ -71,7 +72,7 @@ def analyze_sentiment():
             "sentiment_score_5": stars,
             "sentiment_label": str(prediction),
             "price": price,
-            "category": category,
+            "category": str(category),
             "date": current_date
             
         })
