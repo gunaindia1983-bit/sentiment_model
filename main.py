@@ -46,7 +46,7 @@ def analyze_sentiment():
         return jsonify({"error": "Sentiment model not found"}), 500
 
     # Get current date/time
-    current_date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    current_date = datetime.now().isoformat()
 
     data = request.get_json()
     customer_name = random.choice(customer_names)
@@ -73,6 +73,7 @@ def analyze_sentiment():
             "sentiment_score_5": stars,
             "sentiment_label": str(prediction),
             "price": price,
+            "date": current_date,
             "category": str(category)
             
         }
